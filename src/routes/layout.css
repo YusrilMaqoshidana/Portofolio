@@ -1,0 +1,57 @@
+@import 'tailwindcss';
+
+@theme {
+	/* Colors */
+	--color-primary: #0d7ff2;
+	--color-code-string: #4ec9b0;
+	--color-code-func: #dcdcaa;
+	--color-code-var: #9cdcfe;
+	--color-code-error: #ea3f3f;
+	--color-code-comment: #6a9955;
+	--color-code-keyword: #c586c0;
+	--color-background-light: #f5f7f8;
+	--color-background-dark: #0d0d0d;
+	--color-card-bg: #161616;
+	--color-border-dim: #333333;
+
+	/* Font Family */
+	--font-display: 'Space Grotesk', sans-serif;
+	--font-mono: 'JetBrains Mono', monospace;
+
+	/* Background Image */
+	--background-image-grid-pattern:
+		linear-gradient(to right, #222 1px, transparent 1px),
+		linear-gradient(to bottom, #222 1px, transparent 1px);
+}
+
+/* Dark mode default */
+:root {
+	color-scheme: dark;
+}
+
+.blinking-cursor::after {
+	content: '|';
+	animation: blink 1s step-end infinite;
+	color: #0d7ff2;
+}
+@keyframes blink {
+	0%,
+	100% {
+		opacity: 1;
+	}
+	50% {
+		opacity: 0;
+	}
+}
+body {
+	background-color: #0d0d0d;
+}
+.glass-card {
+	background: rgba(22, 22, 22, 0.6);
+	backdrop-filter: blur(12px);
+	-webkit-backdrop-filter: blur(12px);
+	border: 1px solid rgba(255, 255, 255, 0.05);
+}
+.code-shadow {
+	text-shadow: 0 0 20px rgba(13, 127, 242, 0.1);
+}

@@ -1,6 +1,6 @@
 import type { RequestEvent } from '@sveltejs/kit';
-import type { User, Session, AuthError as SupabaseAuthError } from '@supabase/supabase-js';
-import { PUBLIC_SUPABASE_URL } from '$env/static/public';
+import type { User, Session } from '@supabase/supabase-js';
+import { env } from '$env/dynamic/public';
 
 export interface LoginResult {
 	success: boolean;
@@ -44,12 +44,11 @@ export async function login(
 			};
 		}
 
-		// **Refresh session to ensure cookies are properly set**
+		// Refresh session to ensure cookies are properly set
 		const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
 
 		if (refreshError) {
 			console.warn('Session refresh warning:', refreshError);
-			// Don't fail login if refresh fails, session is still valid
 		}
 
 		return {
@@ -71,13 +70,10 @@ export async function login(
  */
 export async function logout(event: RequestEvent): Promise<{ success: boolean; error?: string }> {
 	try {
-		document.cookie = 'sb-auth-token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
-		document.cookie = 'sb-user-role=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
 		const supabase = event.locals.supabase;
 
 		const { error } = await supabase.auth.signOut();
 
-		// Ignore "Auth session missing" error - user is already logged out
 		if (error && error.message !== 'Auth session missing!') {
 			console.error('Logout error:', error);
 			return {
@@ -86,30 +82,30 @@ export async function logout(event: RequestEvent): Promise<{ success: boolean; e
 			};
 		}
 
-		// Consider it success even if session was already missing
 		return { success: true };
 	} catch (error) {
 		console.error('Unexpected logout error:', error);
 
-		// Check if it's the "Auth session missing" error
 		if (error instanceof Error && error.message === 'Auth session missing!') {
-			// User is already logged out, consider it success
 			return { success: true };
 		}
 
-        // Hapus semua Supabase cookies secara manual
-		const cookiesToDelete = [
-			'sb-access-token',
-			'sb-refresh-token',
-			// Format baru Supabase v2
-			`sb-${PUBLIC_SUPABASE_URL.split('//')[1].split('.')[0]}-auth-token`,
-			`sb-${PUBLIC_SUPABASE_URL.split('//')[1].split('.')[0]}-auth-token.0`,
-			`sb-${PUBLIC_SUPABASE_URL.split('//')[1].split('.')[0]}-auth-token.1`
-		];
+		const supabaseUrl = env.PUBLIC_SUPABASE_URL || '';
+		const projectRef = supabaseUrl ? supabaseUrl.split('//')[1]?.split('.')[0] : '';
 
-		cookiesToDelete.forEach(cookieName => {
-			event.cookies.delete(cookieName, { path: '/' });
-		});
+		if (projectRef) {
+			const cookiesToDelete = [
+				'sb-access-token',
+				'sb-refresh-token',
+				`sb-${projectRef}-auth-token`,
+				`sb-${projectRef}-auth-token.0`,
+				`sb-${projectRef}-auth-token.1`
+			];
+
+			cookiesToDelete.forEach((cookieName) => {
+				event.cookies.delete(cookieName, { path: '/' });
+			});
+		}
 
 		return {
 			success: false,

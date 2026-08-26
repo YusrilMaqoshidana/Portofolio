@@ -6,5 +6,8 @@ export default defineConfig({
 	plugins: [tailwindcss(), sveltekit()],
 	server: {
 		allowedHosts: true
+	},
+	optimizeDeps: {
+		include: ['lucide-svelte', '@iconify/svelte']
 	}
 });

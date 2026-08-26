@@ -6,31 +6,18 @@ export const load: PageServerLoad = async ({ locals }) => {
 	const session = await locals.getSession();
 
 	try {
-		// Fetch Home Section
-		const { data: home } = await supabase
-			.from('home_section')
-			.select('*')
-			.limit(1)
-			.maybeSingle();
+		// Fetch all sections in parallel to significantly reduce server response time
+		const [homeRes, projectsRes, skillsRes, experiencesRes] = await Promise.all([
+			supabase.from('home_section').select('*').limit(1).maybeSingle(),
+			supabase.from('project_section').select('*').order('display_order', { ascending: true }).order('created_at', { ascending: false }),
+			supabase.from('skill_section').select('*').order('display_order', { ascending: true }),
+			supabase.from('experience_section').select('*').order('start_date', { ascending: false })
+		]);
 
-		// Fetch Project Section (ordered by display_order ASC)
-		const { data: projects } = await supabase
-			.from('project_section')
-			.select('*')
-			.order('display_order', { ascending: true })
-			.order('created_at', { ascending: false });
-
-		// Fetch Skill Section (ordered by display_order ASC)
-		const { data: skills } = await supabase
-			.from('skill_section')
-			.select('*')
-			.order('display_order', { ascending: true });
-
-		// Fetch Experience Section (ordered by start_date DESC)
-		const { data: experiences } = await supabase
-			.from('experience_section')
-			.select('*')
-			.order('start_date', { ascending: false });
+		const home = homeRes.data;
+		const projects = projectsRes.data;
+		const skills = skillsRes.data;
+		const experiences = experiencesRes.data;
 
 		return {
 			session,

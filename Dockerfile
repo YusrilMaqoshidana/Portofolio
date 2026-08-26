@@ -1,18 +1,19 @@
-# Stage 1: Build stage
-FROM oven/bun:1-alpine AS builder
+FROM oven/bun:1-slim AS base
 
 WORKDIR /app
 
-# Copy dependency manifests
+FROM base AS deps
+
 COPY package.json bun.lock ./
 
-# Install all dependencies (including devDependencies needed for build)
 RUN bun install --frozen-lockfile
 
-# Copy source files
+FROM base AS builder
+
+COPY --from=deps /app/node_modules ./node_modules
+COPY package.json bun.lock ./
 COPY . .
 
-# Build arguments for SvelteKit PUBLIC_ environment variables
 ARG PUBLIC_SUPABASE_URL
 ARG PUBLIC_SUPABASE_PUBLISHABLE_KEY
 ARG PUBLIC_SUPABASE_ANON_KEY
@@ -21,14 +22,17 @@ ENV PUBLIC_SUPABASE_URL=${PUBLIC_SUPABASE_URL}
 ENV PUBLIC_SUPABASE_PUBLISHABLE_KEY=${PUBLIC_SUPABASE_PUBLISHABLE_KEY}
 ENV PUBLIC_SUPABASE_ANON_KEY=${PUBLIC_SUPABASE_ANON_KEY}
 
-# Build SvelteKit application
+ENV NODE_ENV=production
+
 RUN bun run build
 
-# Install production dependencies only
-RUN rm -rf node_modules && bun install --production --frozen-lockfile
+FROM base AS prod-deps
 
-# Stage 2: Production runner stage
-FROM oven/bun:1-alpine AS runner
+COPY package.json bun.lock ./
+
+RUN bun install --production --frozen-lockfile
+
+FROM oven/bun:1-slim AS runner
 
 WORKDIR /app
 
@@ -36,13 +40,12 @@ ENV NODE_ENV=production
 ENV PORT=3000
 ENV HOST=0.0.0.0
 
-# Copy dependencies and build artifact from builder stage
-COPY --from=builder /app/package.json ./package.json
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/build ./build
+USER bun
 
-# Expose application port
+COPY --chown=bun:bun --from=builder /app/package.json ./package.json
+COPY --chown=bun:bun --from=prod-deps /app/node_modules ./node_modules
+COPY --chown=bun:bun --from=builder /app/build ./build
+
 EXPOSE 3000
 
-# Start server with Bun
 CMD ["bun", "build/index.js"]

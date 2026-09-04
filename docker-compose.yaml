@@ -7,6 +7,7 @@ services:
         PUBLIC_SUPABASE_URL: ${PUBLIC_SUPABASE_URL:-}
         PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${PUBLIC_SUPABASE_PUBLISHABLE_KEY:-}
         PUBLIC_SUPABASE_ANON_KEY: ${PUBLIC_SUPABASE_ANON_KEY:-}
+      network: host
 
     container_name: portofolio-svelte
 

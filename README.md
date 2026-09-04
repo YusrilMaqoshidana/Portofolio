@@ -136,18 +136,70 @@ sudo docker compose logs -f portofolio-svelte
 
 ---
 
-## 🌐 Integrasi Cloudflare Tunnel (Opsional)
+## 🌐 Deployment dengan Systemd User Service & Cloudflare Tunnel (Rekomendasi Production Host)
 
-Jika ingin mempublikasikan portofolio ke internet via Cloudflare Tunnel, tambahkan ingress berikut di `~/.cloudflared/config.yml`:
+Aplikasi dapat dijalankan secara langsung (*native*) menggunakan **Systemd User Service** di OS host tanpa perlu kerumitan container runtime.
+
+### 1. Buat Service Unit (`~/.config/systemd/user/portofolio.service`)
+
+```ini
+[Unit]
+Description=Portofolio Svelte Application
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/usereal/Projects/Portofolio-Svelte
+EnvironmentFile=/home/usereal/Projects/Portofolio-Svelte/.env
+Environment=NODE_ENV=production
+Environment=PORT=3000
+Environment=HOST=0.0.0.0
+ExecStart=/home/usereal/.nvm/versions/node/v22.22.3/bin/node build/index.js
+Restart=always
+RestartSec=5s
+
+[Install]
+WantedBy=default.target
+```
+
+### 2. Jalankan dan Aktifkan Service
+
+```bash
+systemctl --user daemon-reload
+systemctl --user enable --now portofolio
+systemctl --user status portofolio
+```
+
+---
+
+## ☁️ Integrasi Cloudflare Tunnel
+
+Portofolio dipublikasikan ke internet menggunakan **Cloudflare Tunnel** dengan domain **`portofolio.yusrilmaqoshidana.my.id`**.
+
+### Konfigurasi `~/.cloudflared/config.yml`
 
 ```yaml
+tunnel: 25f3057a-df28-4f76-8af2-5deac97d6b79
+credentials-file: /home/usereal/.cloudflared/25f3057a-df28-4f76-8af2-5deac97d6b79.json
+
 ingress:
-  - hostname: portofolio.domain-anda.com
-    service: http://localhost:5173
+  - hostname: chatanalisis.yusrilmaqoshidana.my.id
+    service: http://localhost:80
+  - hostname: portofolio.yusrilmaqoshidana.my.id
+    service: http://localhost:3000
   - service: http_status:404
 ```
 
-Lalu restart service `cloudflared`:
+### Registrasi DNS & Restart Cloudflare Tunnel
+
 ```bash
+# Routing DNS ke tunnel
+cloudflared tunnel route dns 25f3057a-df28-4f76-8af2-5deac97d6b79 portofolio.yusrilmaqoshidana.my.id
+
+# Restart service cloudflared
 systemctl --user restart cloudflared
 ```
+
+Aplikasi sekarang dapat diakses secara publik dan aman di:
+👉 **[https://portofolio.yusrilmaqoshidana.my.id](https://portofolio.yusrilmaqoshidana.my.id)**
+

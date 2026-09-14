@@ -1,8 +1,8 @@
-import * as postmark from 'postmark';
+import { Resend } from 'resend';
 import { env } from '$env/dynamic/private';
 
-const serverToken = env.POSTMARK_SERVER_TOKEN || '8268ec56-d6c1-44b5-9a52-68dbb266dfe7';
-const client = new postmark.ServerClient(serverToken);
+const apiKey = env.API_KEY_RESEND || env.RESEND_API_KEY || 're_xxxxxxxxx';
+const resend = new Resend(apiKey);
 
 interface SendContactEmailParams {
 	toEmail: string;
@@ -19,8 +19,8 @@ export async function sendContactNotificationEmail({
 	subject,
 	message
 }: SendContactEmailParams) {
-	const fromEmail = env.POSTMARK_FROM_EMAIL || 'yusril.maqoshidana@gmail.com';
-	const recipient = toEmail || 'yusril.maqoshidana@gmail.com';
+	const fromEmail = env.RESEND_FROM_EMAIL || 'Portfolio Contact <contact@yusrilmaqoshidana.my.id>';
+	const recipient = toEmail || 'yusrilmaqoshidana.work@gmail.com';
 
 	const emailSubject = `[Portfolio Contact] ${subject || 'New Message'} from ${senderName}`;
 	const textBody = `Halo Yusril,\n\nAnda menerima pesan baru melalui formulir kontak Portofolio Anda:\n\nNama: ${senderName}\nEmail: ${senderEmail}\nSubjek: ${subject || '-'}\n\nPesan:\n${message}\n\n---\nPesan ini dikirim secara otomatis melalui sistem Portofolio.`;
@@ -63,21 +63,24 @@ export async function sendContactNotificationEmail({
 	`;
 
 	try {
-		const response = await client.sendEmail({
-			From: fromEmail,
-			To: recipient,
-			ReplyTo: senderEmail,
-			Subject: emailSubject,
-			TextBody: textBody,
-			HtmlBody: htmlBody,
-			MessageStream: 'outbound',
-			Tag: 'portfolio-contact'
+		const { data, error } = await resend.emails.send({
+			from: fromEmail,
+			to: recipient,
+			replyTo: senderEmail,
+			subject: emailSubject,
+			text: textBody,
+			html: htmlBody
 		});
 
-		console.log('Postmark email sent successfully! MessageID:', response.MessageID);
-		return { success: true, messageId: response.MessageID };
+		if (error) {
+			console.error('Resend error sending email:', error);
+			return { success: false, error: error.message };
+		}
+
+		console.log('Resend email sent successfully! ID:', data?.id);
+		return { success: true, messageId: data?.id };
 	} catch (error: any) {
-		console.error('Postmark error sending email:', error?.message || error);
-		return { success: false, error: error?.message || 'Failed to send email via Postmark' };
+		console.error('Resend error sending email:', error?.message || error);
+		return { success: false, error: error?.message || 'Failed to send email via Resend' };
 	}
 }

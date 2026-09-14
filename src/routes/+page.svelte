@@ -23,7 +23,7 @@
 		<SkillSection skills={data.skills} />
 		<ExperienceSection experiences={data.experiences} />
 		<ProjectSection projects={data.projects} />
-		<ContactSection contactEmail={data.home?.contact_email} socialLinks={data.home?.social_links} {form} />
+		<ContactSection contactEmail={data.home?.contact_email} socialLinks={data.home?.social_links} />
 	</main>
 
 	<Footer />

@@ -14,6 +14,7 @@ export interface HomeSection {
 	bio: string;
 	avatar_url: string;
 	resume_url: string;
+	contact_email?: string;
 	social_links: SocialLinks;
 	updated_at: string;
 }
@@ -56,6 +57,16 @@ export interface ExperienceSection {
 	updated_at: string;
 }
 
+export interface ContactMessage {
+	id: string;
+	name: string;
+	email: string;
+	subject: string;
+	message: string;
+	is_read: boolean;
+	created_at: string;
+}
+
 export interface Database {
 	public: {
 		Tables: {
@@ -90,6 +101,15 @@ export interface Database {
 					updated_at?: string;
 				};
 				Update: Partial<ExperienceSection>;
+			};
+			contact_messages: {
+				Row: ContactMessage;
+				Insert: Omit<ContactMessage, 'id' | 'created_at' | 'is_read'> & {
+					id?: string;
+					created_at?: string;
+					is_read?: boolean;
+				};
+				Update: Partial<ContactMessage>;
 			};
 		};
 	};

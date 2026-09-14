@@ -1,39 +1,44 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import {
-		LayoutDashboard,
 		Home,
 		Briefcase,
 		Code2,
 		GraduationCap,
+		Mail,
 		LogOut,
 		Plus,
 		Trash2,
 		Edit,
-		Upload,
 		Save,
 		ExternalLink,
 		User,
 		CheckCircle2,
-		AlertCircle
+		AlertCircle,
+		Eye,
+		EyeOff,
+		Clock,
+		Send
 	} from 'lucide-svelte';
-	import type { ProjectSection, SkillSection, ExperienceSection } from '$lib/supabase/types';
+	import type { ProjectSection, SkillSection, ExperienceSection, ContactMessage } from '$lib/supabase/types';
 
 	let { data, form } = $props();
 
-	// Active tab: 'home' | 'projects' | 'skills' | 'experience'
-	let activeTab = $state<'home' | 'projects' | 'skills' | 'experience'>('home');
+	// Active tab: 'home' | 'projects' | 'skills' | 'experience' | 'contact'
+	let activeTab = $state<'home' | 'projects' | 'skills' | 'experience' | 'contact'>('home');
 	let loading = $state(false);
 
 	// Edit states
 	let editingProject = $state<ProjectSection | null>(null);
 	let editingSkill = $state<SkillSection | null>(null);
 	let editingExperience = $state<ExperienceSection | null>(null);
+	let selectedMessage = $state<ContactMessage | null>(null);
 
 	// Modal show states
 	let showProjectModal = $state(false);
 	let showSkillModal = $state(false);
 	let showExperienceModal = $state(false);
+	let showMessageModal = $state(false);
 
 	function openProjectModal(project?: ProjectSection) {
 		editingProject = project || null;
@@ -48,6 +53,26 @@
 	function openExperienceModal(exp?: ExperienceSection) {
 		editingExperience = exp || null;
 		showExperienceModal = true;
+	}
+
+	function openMessageModal(msg: ContactMessage) {
+		selectedMessage = msg;
+		showMessageModal = true;
+	}
+
+	const unreadCount = $derived(
+		(data.contactMessages || []).filter((m: ContactMessage) => !m.is_read).length
+	);
+
+	function formatDate(dateStr: string) {
+		if (!dateStr) return '-';
+		return new Date(dateStr).toLocaleString('id-ID', {
+			day: 'numeric',
+			month: 'short',
+			year: 'numeric',
+			hour: '2-digit',
+			minute: '2-digit'
+		});
 	}
 </script>
 
@@ -100,6 +125,19 @@
 				>
 					<GraduationCap class="w-5 h-5" />
 					<span>Experience ({data.experiences.length})</span>
+				</button>
+
+				<button
+					onclick={() => (activeTab = 'contact')}
+					class="w-full flex items-center justify-between px-4 py-3 rounded-xl font-medium text-sm transition-all {activeTab === 'contact' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-gray-400 hover:bg-white/5 hover:text-white'}"
+				>
+					<div class="flex items-center gap-3">
+						<Mail class="w-5 h-5" />
+						<span>Contact & Messages</span>
+					</div>
+					{#if unreadCount > 0}
+						<span class="px-2 py-0.5 rounded-full bg-emerald-500 text-black text-[10px] font-bold">{unreadCount}</span>
+					{/if}
 				</button>
 			</nav>
 		</div>
@@ -170,7 +208,7 @@
 			<div class="space-y-6">
 				<div>
 					<h1 class="text-2xl font-bold text-white">Home Section Management</h1>
-					<p class="text-sm text-gray-400">Update your hero header, bio, tagline, social links, avatar, and resume.</p>
+					<p class="text-sm text-gray-400">Update your hero header, bio, tagline, contact email, social links, avatar, and resume.</p>
 				</div>
 
 				<form
@@ -180,7 +218,7 @@
 					use:enhance={() => {
 						loading = true;
 						return async ({ update }) => {
-							await update();
+							await update({ reset: false });
 							loading = false;
 						};
 					}}
@@ -211,6 +249,18 @@
 								class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-white/5 text-white text-sm focus:border-primary focus:outline-none"
 							/>
 						</div>
+					</div>
+
+					<div class="space-y-2">
+						<label for="contact_email" class="text-xs font-medium text-gray-300">Contact Email (Tampil di bagian Contact & Form)</label>
+						<input
+							id="contact_email"
+							type="email"
+							name="contact_email"
+							value={data.home?.contact_email || 'yusril.maqoshidana@gmail.com'}
+							placeholder="nama@domain.com"
+							class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-white/5 text-white text-sm focus:border-primary focus:outline-none"
+						/>
 					</div>
 
 					<div class="space-y-2">
@@ -511,6 +561,155 @@
 							</div>
 						</div>
 					{/each}
+				</div>
+			</div>
+		{/if}
+
+		<!-- TAB 5: CONTACT & MESSAGES -->
+		{#if activeTab === 'contact'}
+			<div class="space-y-8">
+				<div>
+					<h1 class="text-2xl font-bold text-white">Contact & Inbox Management</h1>
+					<p class="text-sm text-gray-400">Atur email kontak portfolio dan lihat semua pesan yang dikirim oleh pengunjung website.</p>
+				</div>
+
+				<!-- Quick Settings: Contact Email -->
+				<div class="p-6 rounded-2xl border border-white/10 bg-white/5 space-y-4">
+					<h2 class="text-lg font-bold text-white flex items-center gap-2">
+						<Mail class="w-5 h-5 text-primary" />
+						<span>Pengaturan Email Contact</span>
+					</h2>
+					<p class="text-xs text-gray-400">Email ini digunakan pada publikasi portofolio agar pengunjung dapat menghubungi Anda secara langsung.</p>
+
+					<form
+						method="POST"
+						action="?/updateContactEmail"
+						use:enhance={() => {
+							loading = true;
+							return async ({ update }) => {
+								await update();
+								loading = false;
+							};
+						}}
+						class="flex flex-col sm:flex-row items-center gap-3"
+					>
+						<input
+							type="email"
+							name="contact_email"
+							value={data.home?.contact_email || 'yusril.maqoshidana@gmail.com'}
+							required
+							placeholder="Masukkan email kontak"
+							class="w-full sm:flex-1 px-4 py-2.5 rounded-xl border border-white/10 bg-white/5 text-white text-sm focus:border-primary focus:outline-none"
+						/>
+
+						<button
+							type="submit"
+							disabled={loading}
+							class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-white text-xs font-semibold hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20 disabled:opacity-50"
+						>
+							<Save class="w-4 h-4" />
+							<span>{loading ? 'Menyimpan...' : 'Simpan Email'}</span>
+						</button>
+					</form>
+				</div>
+
+				<!-- Contact Messages Inbox -->
+				<div class="space-y-4">
+					<div class="flex items-center justify-between">
+						<h2 class="text-xl font-bold text-white flex items-center gap-2">
+							<span>Kotak Masuk Pesan</span>
+							<span class="px-2.5 py-0.5 rounded-full bg-white/10 text-xs font-mono text-gray-300">
+								{data.contactMessages.length} Total
+							</span>
+						</h2>
+
+						{#if unreadCount > 0}
+							<span class="px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs font-semibold">
+								{unreadCount} Pesan Belum Dibaca
+							</span>
+						{/if}
+					</div>
+
+					{#if data.contactMessages.length === 0}
+						<div class="p-12 text-center rounded-2xl border border-white/10 bg-white/5 space-y-3">
+							<Mail class="w-12 h-12 text-gray-500 mx-auto opacity-50" />
+							<h3 class="text-base font-semibold text-white">Belum Ada Pesan Masuk</h3>
+							<p class="text-xs text-gray-400 max-w-sm mx-auto">
+								Pesan yang dikirim pengunjung melalui formulir kontak portofolio Anda akan muncul di sini.
+							</p>
+						</div>
+					{:else}
+						<div class="space-y-3">
+							{#each data.contactMessages as msg (msg.id)}
+								<div
+									class="p-5 rounded-2xl border transition duration-200 space-y-3 {msg.is_read ? 'border-white/10 bg-white/5 opacity-80' : 'border-primary/40 bg-primary/5 shadow-lg shadow-primary/5'}"
+								>
+									<div class="flex flex-wrap items-start justify-between gap-3">
+										<div class="space-y-1">
+											<div class="flex items-center gap-2 flex-wrap">
+												<h3 class="text-base font-bold text-white">{msg.name}</h3>
+												<span class="text-xs text-gray-400 font-mono">&lt;{msg.email}&gt;</span>
+												{#if !msg.is_read}
+													<span class="px-2 py-0.5 rounded-full bg-emerald-500 text-black text-[10px] font-extrabold uppercase">Baru</span>
+												{/if}
+											</div>
+											{#if msg.subject}
+												<p class="text-xs font-semibold text-primary">Subjek: {msg.subject}</p>
+											{/if}
+										</div>
+
+										<div class="flex items-center gap-2">
+											<span class="text-[11px] text-gray-400 flex items-center gap-1 mr-2">
+												<Clock class="w-3.5 h-3.5" />
+												{formatDate(msg.created_at)}
+											</span>
+
+											<form method="POST" action="?/toggleReadMessage" use:enhance>
+												<input type="hidden" name="id" value={msg.id} />
+												<input type="hidden" name="is_read" value={msg.is_read ? 'true' : 'false'} />
+												<button
+													type="submit"
+													title={msg.is_read ? 'Tandai Belum Dibaca' : 'Tandai Sudah Dibaca'}
+													class="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white"
+												>
+													{#if msg.is_read}
+														<EyeOff class="w-4 h-4 text-gray-400" />
+													{:else}
+														<Eye class="w-4 h-4 text-emerald-400" />
+													{/if}
+												</button>
+											</form>
+
+											<a
+												href="mailto:{msg.email}?subject=Re: {encodeURIComponent(msg.subject || 'Balasan Kontak Portofolio')}"
+												target="_blank"
+												title="Balas via Email"
+												class="p-2 rounded-lg bg-primary/20 hover:bg-primary/30 text-primary"
+											>
+												<Send class="w-4 h-4" />
+											</a>
+
+											<form method="POST" action="?/deleteMessage" use:enhance>
+												<input type="hidden" name="id" value={msg.id} />
+												<button
+													type="submit"
+													onclick={(e) => !confirm('Hapus pesan ini?') && e.preventDefault()}
+													title="Hapus Pesan"
+													class="p-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400"
+												>
+													<Trash2 class="w-4 h-4" />
+												</button>
+											</form>
+										</div>
+									</div>
+
+									<div class="p-3.5 rounded-xl bg-black/30 border border-white/5 text-xs text-gray-200 whitespace-pre-line leading-relaxed">
+										{msg.message}
+									</div>
+								</div>
+							{/each}
+						</div>
+					{/if}
 				</div>
 			</div>
 		{/if}

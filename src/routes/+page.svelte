@@ -5,8 +5,9 @@
 	import ProjectSection from '$lib/components/sections/ProjectSection.svelte';
 	import SkillSection from '$lib/components/sections/SkillSection.svelte';
 	import ExperienceSection from '$lib/components/sections/ExperienceSection.svelte';
+	import ContactSection from '$lib/components/sections/ContactSection.svelte';
 
-	let { data } = $props();
+	let { data, form } = $props();
 </script>
 
 <svelte:head>
@@ -15,13 +16,14 @@
 </svelte:head>
 
 <div class="min-h-screen bg-background-dark text-white selection:bg-primary selection:text-white">
-	<Navbar />
+	<Navbar brandName={data.home?.full_name ? data.home.full_name.split(' ')[0] : 'Yusril'} resumeLink={data.home?.resume_url || '#'} />
 
 	<main>
 		<HomeSection data={data.home} />
-		<ProjectSection projects={data.projects} />
 		<SkillSection skills={data.skills} />
 		<ExperienceSection experiences={data.experiences} />
+		<ProjectSection projects={data.projects} />
+		<ContactSection contactEmail={data.home?.contact_email} socialLinks={data.home?.social_links} {form} />
 	</main>
 
 	<Footer />

@@ -32,6 +32,7 @@
 		"@iconify/svelte": "^5.1.0",
 		"@supabase/ssr": "^0.12.5",
 		"@supabase/supabase-js": "^2.112.4",
-		"lucide-svelte": "^0.562.0"
+		"lucide-svelte": "^0.562.0",
+		"postmark": "^5.1.0"
 	}
 }

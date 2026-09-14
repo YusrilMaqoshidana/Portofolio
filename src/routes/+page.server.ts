@@ -1,5 +1,7 @@
+import { fail, type Actions } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import type { HomeSection, ProjectSection, SkillSection, ExperienceSection } from '$lib/supabase/types';
+import { sendContactNotificationEmail } from '$lib/server/postmark';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const supabase = locals.supabase;
@@ -35,5 +37,52 @@ export const load: PageServerLoad = async ({ locals }) => {
 			skills: [],
 			experiences: []
 		};
+	}
+};
+
+export const actions: Actions = {
+	sendContact: async ({ request, locals }) => {
+		const formData = await request.formData();
+		const name = formData.get('name')?.toString().trim() || '';
+		const email = formData.get('email')?.toString().trim() || '';
+		const subject = formData.get('subject')?.toString().trim() || '';
+		const message = formData.get('message')?.toString().trim() || '';
+
+		if (!name || !email || !message) {
+			return fail(400, { contactError: 'Nama, Email, dan Pesan wajib diisi.' });
+		}
+
+		// Basic email format check
+		if (!email.includes('@') || !email.includes('.')) {
+			return fail(400, { contactError: 'Format alamat email tidak valid.' });
+		}
+
+		// 1. Save contact message to Supabase DB
+		const { error } = await locals.supabase.from('contact_messages').insert({
+			name,
+			email,
+			subject,
+			message
+		});
+
+		if (error) {
+			console.error('Error saving contact message to Supabase:', error);
+			return fail(400, { contactError: 'Gagal menyimpan pesan: ' + error.message });
+		}
+
+		// 2. Fetch destination email address from home_section
+		const { data: home } = await locals.supabase.from('home_section').select('contact_email').limit(1).maybeSingle();
+		const targetEmail = home?.contact_email || 'yusril.maqoshidana@gmail.com';
+
+		// 3. Send email notification via Postmark
+		await sendContactNotificationEmail({
+			toEmail: targetEmail,
+			senderName: name,
+			senderEmail: email,
+			subject,
+			message
+		});
+
+		return { contactSuccess: true, contactMessage: 'Pesan Anda telah berhasil dikirim dan email notifikasi telah diteruskan!' };
 	}
 };

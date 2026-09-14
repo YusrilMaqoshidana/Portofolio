@@ -1,7 +1,7 @@
 import { logout } from '$lib/supabase/auth.server';
 import { fail, redirect, type Actions } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
-import type { HomeSection, ProjectSection, SkillSection, ExperienceSection } from '$lib/supabase/types';
+import type { HomeSection, ProjectSection, SkillSection, ExperienceSection, ContactMessage } from '$lib/supabase/types';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const supabase = locals.supabase;
@@ -10,12 +10,14 @@ export const load: PageServerLoad = async ({ locals }) => {
 	const { data: projects } = await supabase.from('project_section').select('*').order('display_order', { ascending: true });
 	const { data: skills } = await supabase.from('skill_section').select('*').order('display_order', { ascending: true });
 	const { data: experiences } = await supabase.from('experience_section').select('*').order('start_date', { ascending: false });
+	const { data: contactMessages } = await supabase.from('contact_messages').select('*').order('created_at', { ascending: false });
 
 	return {
 		home: (home as HomeSection | null),
 		projects: (projects as ProjectSection[] | null) ?? [],
 		skills: (skills as SkillSection[] | null) ?? [],
-		experiences: (experiences as ExperienceSection[] | null) ?? []
+		experiences: (experiences as ExperienceSection[] | null) ?? [],
+		contactMessages: (contactMessages as ContactMessage[] | null) ?? []
 	};
 };
 
@@ -34,6 +36,7 @@ export const actions: Actions = {
 		const full_name = formData.get('full_name')?.toString() || '';
 		const tagline = formData.get('tagline')?.toString() || '';
 		const bio = formData.get('bio')?.toString() || '';
+		const contact_email = formData.get('contact_email')?.toString() || '';
 		let avatar_url = formData.get('avatar_url')?.toString() || '';
 		let resume_url = formData.get('resume_url')?.toString() || '';
 		const github = formData.get('github')?.toString() || '';
@@ -78,6 +81,7 @@ export const actions: Actions = {
 			full_name,
 			tagline,
 			bio,
+			contact_email,
 			avatar_url,
 			resume_url,
 			social_links
@@ -96,14 +100,96 @@ export const actions: Actions = {
 		}
 
 		if (id) {
-			const { error } = await locals.supabase.from('home_section').update(payload).eq('id', id);
-			if (error) return fail(400, { error: error.message });
+			let { error } = await locals.supabase.from('home_section').update(payload).eq('id', id);
+			if (error) {
+				if (error.message.includes('contact_email')) {
+					const { contact_email, ...payloadWithoutEmail } = payload;
+					const { error: retryErr } = await locals.supabase.from('home_section').update(payloadWithoutEmail).eq('id', id);
+					if (retryErr) return fail(400, { error: retryErr.message });
+					return fail(400, {
+						error: "Kolom 'contact_email' belum dibuat di database Supabase Anda. Silakan jalankan SQL Migration di Supabase SQL Editor."
+					});
+				}
+				return fail(400, { error: error.message });
+			}
 		} else {
-			const { error } = await locals.supabase.from('home_section').insert(payload);
-			if (error) return fail(400, { error: error.message });
+			let { error } = await locals.supabase.from('home_section').insert(payload);
+			if (error) {
+				if (error.message.includes('contact_email')) {
+					const { contact_email, ...payloadWithoutEmail } = payload;
+					const { error: retryErr } = await locals.supabase.from('home_section').insert(payloadWithoutEmail);
+					if (retryErr) return fail(400, { error: retryErr.message });
+					return fail(400, {
+						error: "Kolom 'contact_email' belum dibuat di database Supabase Anda. Silakan jalankan SQL Migration di Supabase SQL Editor."
+					});
+				}
+				return fail(400, { error: error.message });
+			}
 		}
 
 		return { success: true, message: 'Home section updated successfully!' };
+	},
+
+	updateContactEmail: async ({ request, locals }) => {
+		const formData = await request.formData();
+		const contact_email = formData.get('contact_email')?.toString().trim() || '';
+
+		if (!contact_email) return fail(400, { error: 'Contact email address is required' });
+
+		const { data: existing } = await locals.supabase
+			.from('home_section')
+			.select('id')
+			.limit(1)
+			.maybeSingle();
+
+		if (existing?.id) {
+			const { error } = await locals.supabase.from('home_section').update({ contact_email }).eq('id', existing.id);
+			if (error) {
+				if (error.message.includes('contact_email')) {
+					return fail(400, {
+						error: "Kolom 'contact_email' belum dibuat di database Supabase Anda. Silakan jalankan SQL Migration di Supabase SQL Editor."
+					});
+				}
+				return fail(400, { error: error.message });
+			}
+		} else {
+			const { error } = await locals.supabase.from('home_section').insert({ contact_email });
+			if (error) {
+				if (error.message.includes('contact_email')) {
+					return fail(400, {
+						error: "Kolom 'contact_email' belum dibuat di database Supabase Anda. Silakan jalankan SQL Migration di Supabase SQL Editor."
+					});
+				}
+				return fail(400, { error: error.message });
+			}
+		}
+
+		return { success: true, message: 'Contact email updated successfully!' };
+	},
+
+	toggleReadMessage: async ({ request, locals }) => {
+		const formData = await request.formData();
+		const id = formData.get('id')?.toString();
+		const is_read = formData.get('is_read') === 'true';
+
+		if (!id) return fail(400, { error: 'Invalid message ID' });
+
+		const { error } = await locals.supabase.from('contact_messages').update({ is_read: !is_read }).eq('id', id);
+		if (error) return fail(400, { error: error.message });
+
+		return { success: true, message: 'Message status updated!' };
+	},
+
+	deleteMessage: async ({ request, locals }) => {
+		const formData = await request.formData();
+		const id = formData.get('id')?.toString();
+
+		if (!id) return fail(400, { error: 'Invalid message ID' });
+
+		const { error } = await locals.supabase.from('contact_messages').delete().eq('id', id);
+		if (error) return fail(400, { error: error.message });
+
+		return { success: true, message: 'Message deleted successfully!' };
 	},
 
 	saveProject: async ({ request, locals }) => {

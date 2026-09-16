@@ -7,9 +7,12 @@
 		socialLinks?: SocialLinks | null;
 	}
 
-	let { contactEmail = 'yusril.maqoshidana@gmail.com', socialLinks = null }: Props = $props();
+	let { contactEmail = 'yusrilmaqoshidana.work@gmail.com', socialLinks = null }: Props = $props();
 
-	let emailToUse = $derived(contactEmail || 'yusril.maqoshidana@gmail.com');
+	let emailToUse = $derived(contactEmail || 'yusrilmaqoshidana.work@gmail.com');
+	let gmailUrl = $derived(
+		`https://mail.google.com/mail/u/0/?fs=1&tf=cm&source=mailto&su=Portfolio+Inquiry&to=${encodeURIComponent(emailToUse)}`
+	);
 	let copied = $state(false);
 
 	function copyEmail() {
@@ -43,7 +46,9 @@
 			<div class="text-xs font-medium text-primary uppercase tracking-wider">Official Email</div>
 			<div class="flex items-center justify-center gap-3">
 				<a
-					href="mailto:{emailToUse}"
+					href={gmailUrl}
+					target="_blank"
+					rel="noopener noreferrer"
 					class="text-lg md:text-xl font-bold text-white hover:text-primary transition-colors truncate"
 				>
 					{emailToUse}
@@ -69,7 +74,9 @@
 		<!-- Action Button -->
 		<div>
 			<a
-				href="mailto:{emailToUse}?subject=Portfolio%20Inquiry"
+				href={gmailUrl}
+				target="_blank"
+				rel="noopener noreferrer"
 				class="inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-primary text-white font-semibold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 text-sm md:text-base"
 			>
 				<Mail class="w-5 h-5" />

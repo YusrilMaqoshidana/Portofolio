@@ -29,6 +29,10 @@
 	color-scheme: dark;
 }
 
+html {
+	scroll-behavior: smooth;
+}
+
 .blinking-cursor::after {
 	content: '|';
 	animation: blink 1s step-end infinite;

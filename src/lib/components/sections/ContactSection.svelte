@@ -23,7 +23,7 @@
 	}
 </script>
 
-<section id="contact" class="py-20 px-6 max-w-4xl mx-auto border-t border-white/10">
+<section id="contact" class="py-20 px-6 max-w-4xl mx-auto border-t border-white/10 scroll-mt-24">
 	<div class="mb-12 text-center space-y-3">
 		<div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-code-keyword/10 border border-code-keyword/20 text-code-keyword text-xs font-semibold">
 			<Mail class="w-3.5 h-3.5" />

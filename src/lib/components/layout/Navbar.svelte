@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
+	import { onMount } from 'svelte';
 
 	interface Props {
 		brandName?: string;
@@ -14,6 +15,60 @@
 	}: Props = $props();
 
 	let mobileMenuOpen = $state(false);
+	let activeSection = $state('home');
+
+	const navItems = [
+		{
+			id: 'home',
+			number: '01.',
+			label: '_home',
+			activeColor: 'text-primary',
+			hoverColor: 'hover:text-primary',
+			numColorActive: 'text-primary',
+			numColorInactive: 'text-primary/50 group-hover:text-primary',
+			activeBg: 'bg-primary/10 border-primary/20'
+		},
+		{
+			id: 'skills',
+			number: '02.',
+			label: '_skills',
+			activeColor: 'text-code-string',
+			hoverColor: 'hover:text-code-string',
+			numColorActive: 'text-code-string',
+			numColorInactive: 'text-code-string/50 group-hover:text-code-string',
+			activeBg: 'bg-code-string/10 border-code-string/20'
+		},
+		{
+			id: 'experience',
+			number: '03.',
+			label: '_experience',
+			activeColor: 'text-code-error',
+			hoverColor: 'hover:text-code-error',
+			numColorActive: 'text-code-error',
+			numColorInactive: 'text-code-error/50 group-hover:text-code-error',
+			activeBg: 'bg-code-error/10 border-code-error/20'
+		},
+		{
+			id: 'projects',
+			number: '04.',
+			label: '_projects',
+			activeColor: 'text-code-func',
+			hoverColor: 'hover:text-code-func',
+			activeBg: 'bg-code-func/10 border-code-func/20',
+			numColorActive: 'text-code-func',
+			numColorInactive: 'text-code-func/50 group-hover:text-code-func'
+		},
+		{
+			id: 'contact',
+			number: '05.',
+			label: '_contact',
+			activeColor: 'text-code-keyword',
+			hoverColor: 'hover:text-code-keyword',
+			numColorActive: 'text-code-keyword',
+			numColorInactive: 'text-code-keyword/50 group-hover:text-code-keyword',
+			activeBg: 'bg-code-keyword/10 border-code-keyword/20'
+		}
+	];
 
 	function toggleMobileMenu() {
 		mobileMenuOpen = !mobileMenuOpen;
@@ -22,6 +77,43 @@
 	function closeMobileMenu() {
 		mobileMenuOpen = false;
 	}
+
+	function handleNavClick(id: string) {
+		closeMobileMenu();
+		activeSection = id;
+	}
+
+	onMount(() => {
+		if (window.location.hash) {
+			const hashId = window.location.hash.replace('#', '');
+			if (navItems.some((item) => item.id === hashId)) {
+				activeSection = hashId;
+			}
+		}
+
+		const observerOptions: IntersectionObserverInit = {
+			root: null,
+			rootMargin: '-20% 0px -50% 0px',
+			threshold: 0
+		};
+
+		const observer = new IntersectionObserver((entries) => {
+			entries.forEach((entry) => {
+				if (entry.isIntersecting) {
+					activeSection = entry.target.id;
+				}
+			});
+		}, observerOptions);
+
+		navItems.forEach((item) => {
+			const el = document.getElementById(item.id);
+			if (el) observer.observe(el);
+		});
+
+		return () => {
+			observer.disconnect();
+		};
+	});
 </script>
 
 <nav class="fixed top-0 right-0 left-0 z-50 transition-all duration-300">
@@ -40,37 +132,22 @@
 			</a>
 
 			<!-- Desktop Nav Links -->
-			<div class="hidden items-center gap-8 text-sm font-medium md:flex">
-				<a
-					class="group flex items-center gap-2 text-gray-400 transition-colors hover:text-primary"
-					href="#home"
-				>
-					<span class="text-primary/50 group-hover:text-primary">01.</span> _home
-				</a>
-				<a
-					class="group flex items-center gap-2 text-gray-400 transition-colors hover:text-code-string"
-					href="#skills"
-				>
-					<span class="text-code-string/50 group-hover:text-code-string">02.</span> _skills
-				</a>
-				<a
-					class="group flex items-center gap-2 text-gray-400 transition-colors hover:text-code-error"
-					href="#experience"
-				>
-					<span class="text-code-error/50 group-hover:text-code-error">03.</span> _experience
-				</a>
-				<a
-					class="group flex items-center gap-2 text-gray-400 transition-colors hover:text-code-func"
-					href="#projects"
-				>
-					<span class="text-code-func/50 group-hover:text-code-func">04.</span> _projects
-				</a>
-				<a
-					class="group flex items-center gap-2 text-gray-400 transition-colors hover:text-code-keyword"
-					href="#contact"
-				>
-					<span class="text-code-keyword/50 group-hover:text-code-keyword">05.</span> _contact
-				</a>
+			<div class="hidden items-center gap-2 text-sm font-medium md:flex">
+				{#each navItems as item (item.id)}
+					{@const isActive = activeSection === item.id}
+					<a
+						class="group flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all duration-200 {isActive
+							? `${item.activeColor} ${item.activeBg} font-semibold shadow-sm`
+							: `text-gray-400 border-transparent ${item.hoverColor}`}"
+						href="#{item.id}"
+						onclick={() => handleNavClick(item.id)}
+					>
+						<span class="transition-colors {isActive ? item.numColorActive : item.numColorInactive}">
+							{item.number}
+						</span>
+						{item.label}
+					</a>
+				{/each}
 			</div>
 
 			<!-- Resume Button -->
@@ -99,49 +176,27 @@
 
 		<!-- Mobile Dropdown Menu -->
 		{#if mobileMenuOpen}
-			<div class="mt-2 rounded-2xl glass-card p-5 border border-white/10 md:hidden flex flex-col space-y-4 animate-in fade-in slide-in-from-top-2 duration-200">
-				<a
-					onclick={closeMobileMenu}
-					class="flex items-center gap-2 text-sm text-gray-300 hover:text-primary transition-colors py-1"
-					href="#home"
-				>
-					<span class="text-primary">01.</span> _home
-				</a>
-				<a
-					onclick={closeMobileMenu}
-					class="flex items-center gap-2 text-sm text-gray-300 hover:text-code-string transition-colors py-1"
-					href="#skills"
-				>
-					<span class="text-code-string">02.</span> _skills
-				</a>
-				<a
-					onclick={closeMobileMenu}
-					class="flex items-center gap-2 text-sm text-gray-300 hover:text-code-error transition-colors py-1"
-					href="#experience"
-				>
-					<span class="text-code-error">03.</span> _experience
-				</a>
-				<a
-					onclick={closeMobileMenu}
-					class="flex items-center gap-2 text-sm text-gray-300 hover:text-code-func transition-colors py-1"
-					href="#projects"
-				>
-					<span class="text-code-func">04.</span> _projects
-				</a>
-				<a
-					onclick={closeMobileMenu}
-					class="flex items-center gap-2 text-sm text-gray-300 hover:text-code-keyword transition-colors py-1"
-					href="#contact"
-				>
-					<span class="text-code-keyword">05.</span> _contact
-				</a>
+			<div class="mt-2 rounded-2xl glass-card p-5 border border-white/10 md:hidden flex flex-col space-y-2 animate-in fade-in slide-in-from-top-2 duration-200">
+				{#each navItems as item (item.id)}
+					{@const isActive = activeSection === item.id}
+					<a
+						onclick={() => handleNavClick(item.id)}
+						class="flex items-center gap-2 text-sm font-medium transition-all px-3 py-2.5 rounded-xl border {isActive
+							? `${item.activeColor} ${item.activeBg} font-semibold`
+							: `text-gray-300 border-transparent ${item.hoverColor}`}"
+						href="#{item.id}"
+					>
+						<span class={item.numColorActive}>{item.number}</span>
+						{item.label}
+					</a>
+				{/each}
 
 				{#if resumeLink && resumeLink !== '#'}
 					<a
 						onclick={closeMobileMenu}
 						class="inline-flex items-center justify-center gap-2 rounded-xl border border-primary/20
 						bg-primary/10 px-4 py-2.5 text-xs font-bold text-primary
-						transition-all hover:bg-primary hover:text-white pt-2"
+						transition-all hover:bg-primary hover:text-white pt-2 mt-2"
 						href={resumeLink}
 						target="_blank"
 						rel="noopener noreferrer"

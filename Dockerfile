@@ -1,17 +1,17 @@
-FROM oven/bun:1-slim AS base
+FROM node:22-alpine AS base
 
 WORKDIR /app
 
 FROM base AS deps
 
-COPY package.json bun.lock ./
+COPY package.json package-lock.json ./
 
-RUN bun install --frozen-lockfile
+RUN npm ci
 
 FROM base AS builder
 
 COPY --from=deps /app/node_modules ./node_modules
-COPY package.json bun.lock ./
+COPY package.json package-lock.json ./
 COPY . .
 
 ARG PUBLIC_SUPABASE_URL
@@ -24,15 +24,15 @@ ENV PUBLIC_SUPABASE_ANON_KEY=${PUBLIC_SUPABASE_ANON_KEY}
 
 ENV NODE_ENV=production
 
-RUN bun run build
+RUN npm run build
 
 FROM base AS prod-deps
 
-COPY package.json bun.lock ./
+COPY package.json package-lock.json ./
 
-RUN bun install --production --frozen-lockfile
+RUN npm ci --omit=dev
 
-FROM oven/bun:1-slim AS runner
+FROM node:22-alpine AS runner
 
 WORKDIR /app
 
@@ -40,12 +40,12 @@ ENV NODE_ENV=production
 ENV PORT=3000
 ENV HOST=0.0.0.0
 
-USER bun
+USER node
 
-COPY --chown=bun:bun --from=builder /app/package.json ./package.json
-COPY --chown=bun:bun --from=prod-deps /app/node_modules ./node_modules
-COPY --chown=bun:bun --from=builder /app/build ./build
+COPY --chown=node:node --from=builder /app/package.json ./package.json
+COPY --chown=node:node --from=prod-deps /app/node_modules ./node_modules
+COPY --chown=node:node --from=builder /app/build ./build
 
 EXPOSE 3000
 
-CMD ["bun", "build/index.js"]
+CMD ["node", "build/index.js"]

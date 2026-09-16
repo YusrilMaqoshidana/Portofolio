@@ -1,13 +1,13 @@
-# Portofolio SvelteKit + Supabase + Bun + Docker
+# Portofolio SvelteKit + Supabase + Docker
 
-Sistem Manajemen Portofolio & CMS Personal modern yang dibangun menggunakan **SvelteKit 2** (Svelte 5 Runes), **Supabase** sebagai Backend-as-a-Service, **Bun** sebagai runtime/package manager, dan didukung oleh **Docker Compose** multi-stage build tingkat produksi.
+Sistem Manajemen Portofolio & CMS Personal modern yang dibangun menggunakan **SvelteKit 2** (Svelte 5 Runes), **Supabase** sebagai Backend-as-a-Service, **Node.js** sebagai runtime & **npm** sebagai package manager, dan didukung oleh **Docker Compose** multi-stage build tingkat produksi.
 
 ---
 
 ## 🛠️ Tech Stack
 
 - **Frontend Framework**: [SvelteKit 2](https://kit.svelte.dev/) & [Svelte 5](https://svelte.dev/)
-- **Runtime & Package Manager**: [Bun](https://bun.sh/)
+- **Runtime & Package Manager**: [Node.js](https://nodejs.org/) & [npm](https://www.npmjs.com/)
 - **Styling**: [Tailwind CSS v4](https://tailwindcss.com/)
 - **Database & Auth**: [Supabase](https://supabase.com/) (Database, Auth, Storage)
 - **Adapter**: `@sveltejs/adapter-node`
@@ -32,10 +32,8 @@ Sistem Manajemen Portofolio & CMS Personal modern yang dibangun menggunakan **Sv
 │       └── (admin)/             # Dashboard Admin CMS & Halaman Login
 ├── supabase/
 │   └── migrations/              # Skrip SQL pembuatan tabel, RLS, storage, & user admin
-├── Dockerfile                   # Production Multi-Stage Dockerfile (Non-root user 'bun')
+├── Dockerfile                   # Production Multi-Stage Dockerfile (Non-root user 'node')
 ├── docker-compose.yaml          # Production Docker Compose (Port 5173:3000, Healthcheck, Logging)
-├── Dockerfile.dev               # Development Dockerfile (HMR Live-reload)
-├── compose.dev.yaml             # Development Docker Compose dengan Volume Mount
 ├── .dockerignore                # Mengabaikan file sensitif/sampah lokal dari Docker context
 ├── svelte.config.js             # Konfigurasi SvelteKit dengan adapter-node
 └── vite.config.ts               # Konfigurasi Vite & optimasi pre-bundling icon
@@ -88,30 +86,24 @@ npx supabase db push
 
 1. **Install Dependensi**:
    ```bash
-   bun install --frozen-lockfile
+   npm install
    ```
 
 2. **Jalankan Dev Server**:
    ```bash
-   bun run dev
+   npm run dev
    ```
    Aplikasi dapat diakses di `http://localhost:5173`.
 
 3. **Build & Preview Production Lokal**:
    ```bash
-   bun run build
-   bun build/index.js
+   npm run build
+   node build/index.js
    ```
 
 ---
 
 ## 🐳 Jalankan Menggunakan Docker
-
-### Mode Development (Dengan Live-Reload / HMR)
-```bash
-sudo docker compose -f compose.dev.yaml up --build
-```
-*Aplikasi berjalan di `http://localhost:5173` dengan auto-reload saat kode diubah.*
 
 ### Mode Production (Multi-Stage Build, Ringan, & Aman)
 ```bash
@@ -129,7 +121,7 @@ sudo docker compose logs -f portofolio-svelte
 ```
 - **Port Mapping**: Host `5173` -> Container `3000` (`http://localhost:5173`)
 - **Fitur Keamanan Production**:
-  - Dijalankan oleh non-root user `bun` (`USER bun`).
+  - Dijalankan oleh non-root user `node` (`USER node`).
   - Healthcheck otomatis terpusat di `docker-compose.yaml`.
   - Rotasi log otomatis (`max-size: 10m`, `max-file: 3`).
   - Pemisahan build-time variable (`PUBLIC_*`) dan runtime secret.
@@ -202,4 +194,3 @@ systemctl --user restart cloudflared
 
 Aplikasi sekarang dapat diakses secara publik dan aman di:
 👉 **[https://portofolio.yusrilmaqoshidana.my.id](https://portofolio.yusrilmaqoshidana.my.id)**
-

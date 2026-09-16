@@ -29,7 +29,7 @@
 	);
 </script>
 
-<section id="home" class="relative min-h-[90vh] flex items-center justify-center py-20 px-6 max-w-6xl mx-auto">
+<section id="home" class="relative min-h-[90vh] flex items-center justify-center py-20 px-6 max-w-6xl mx-auto scroll-mt-24">
 	{#if loading}
 		<!-- Skeleton Loader -->
 		<div class="w-full grid grid-cols-1 lg:grid-cols-12 gap-12 items-center animate-pulse">

@@ -48,7 +48,7 @@
 	}
 </script>
 
-<section id="experience" class="py-20 px-6 max-w-6xl mx-auto border-t border-white/10">
+<section id="experience" class="py-20 px-6 max-w-6xl mx-auto border-t border-white/10 scroll-mt-24">
 	<div class="mb-12 text-center">
 		<h2 class="text-3xl md:text-4xl font-bold text-white tracking-tight">
 			Work <span class="text-primary">Experience</span>

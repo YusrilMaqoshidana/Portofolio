@@ -117,7 +117,7 @@ sudo docker compose up -d
 sudo docker compose ps
 
 # 4. Cek log aplikasi
-sudo docker compose logs -f portofolio-svelte
+sudo docker compose logs -f portofolio
 ```
 - **Port Mapping**: Host `5173` -> Container `3000` (`http://localhost:5173`)
 - **Fitur Keamanan Production**:
@@ -141,8 +141,8 @@ After=network.target
 
 [Service]
 Type=simple
-WorkingDirectory=/home/usereal/Projects/Portofolio-Svelte
-EnvironmentFile=/home/usereal/Projects/Portofolio-Svelte/.env
+WorkingDirectory=/home/usereal/Projects/Portofolio
+EnvironmentFile=/home/usereal/Projects/Portofolio/.env
 Environment=NODE_ENV=production
 Environment=PORT=3000
 Environment=HOST=0.0.0.0

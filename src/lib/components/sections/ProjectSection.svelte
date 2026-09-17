@@ -79,6 +79,8 @@
 								<img
 									src={project.thumbnail_url}
 									alt={project.title}
+									loading="lazy"
+									decoding="async"
 									class="w-full h-full object-cover group-hover:scale-105 transition duration-500"
 								/>
 							{:else}

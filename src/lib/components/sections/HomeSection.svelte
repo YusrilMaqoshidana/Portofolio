@@ -152,6 +152,11 @@
 					<img
 						src={home.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80'}
 						alt={home.full_name}
+						loading="eager"
+						fetchpriority="high"
+						decoding="async"
+						width="320"
+						height="320"
 						class="relative w-64 h-64 md:w-80 md:h-80 rounded-full object-cover border-4 border-white/10 shadow-2xl"
 					/>
 				</div>

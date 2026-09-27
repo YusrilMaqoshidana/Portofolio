@@ -50,17 +50,6 @@
 		<div class="w-full grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
 			<!-- Text Content -->
 			<div class="lg:col-span-7 space-y-7">
-				<!-- Status badge -->
-				<div use:reveal={{ delay: 0 }}>
-					<div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full glass border border-blue-500/20 text-blue-400 text-xs font-mono">
-						<span class="relative flex h-2 w-2">
-							<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-							<span class="relative inline-flex rounded-full h-2 w-2 bg-blue-400"></span>
-						</span>
-						available_for_projects
-					</div>
-				</div>
-
 				<!-- Heading -->
 				<div use:reveal={{ delay: 80 }}>
 					<p class="font-mono text-xs text-gray-500 mb-2 tracking-widest uppercase">// 01. introduction</p>

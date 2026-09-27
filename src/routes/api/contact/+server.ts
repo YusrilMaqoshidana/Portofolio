@@ -17,35 +17,28 @@ export const POST: RequestHandler = async (event) => {
 			cookies: { getAll: () => [], setAll: () => {} }
 		} as any);
 
-		// 1. Cek atau Reset limit
-		const { data: limit, error: limitError } = await supabase
+		// Rate limit
+		const { data: limit } = await supabase
 			.from('contact_limits')
 			.select('count, reset_at')
 			.eq('email', email)
 			.single();
 
-		let currentCount = 0;
-		const now = new Date().toISOString();
-
+		const nowIso = new Date().toISOString();
 		if (limit) {
 			const resetAt = new Date(limit.reset_at).getTime();
-			// Reset jika sudah > 24 jam (86400000 ms)
 			if (Date.now() - resetAt > 86400000) {
-				await supabase.from('contact_limits').update({ count: 1, reset_at: now }).eq('email', email);
-				currentCount = 1;
+				await supabase.from('contact_limits').update({ count: 1, reset_at: nowIso }).eq('email', email);
+			} else if (limit.count >= 5) {
+				return new Response(JSON.stringify({ error: 'Limit reached (max 5 per 24h)' }), { status: 429 });
 			} else {
-				if (limit.count >= 5) {
-					return new Response(JSON.stringify({ error: 'Limit reached (max 5 per 24h)' }), { status: 429 });
-				}
 				await supabase.from('contact_limits').update({ count: limit.count + 1 }).eq('email', email);
-				currentCount = limit.count + 1;
 			}
 		} else {
-			await supabase.from('contact_limits').insert({ email, count: 1, reset_at: now });
-			currentCount = 1;
+			await supabase.from('contact_limits').insert({ email, count: 1, reset_at: nowIso });
 		}
 
-		// 2. Fetch destination email
+		// Fetch destination email
 		const { data: homeData, error: homeError } = await supabase
 			.from('home_section')
 			.select('contact_email')
@@ -55,15 +48,13 @@ export const POST: RequestHandler = async (event) => {
 			return new Response(JSON.stringify({ error: 'Config error' }), { status: 500 });
 		}
 
-		// 3. Send via Resend
+		// Send via Resend using verified domain
 		const { error } = await resend.emails.send({
-			from: 'Portfolio Contact <onboarding@resend.dev>',
+			from: 'Portfolio Contact <contact@yusrilmaqoshidana.my.id>',
 			to: [homeData.contact_email],
-			subject: `New message: ${subject || 'Portfolio Contact'}`,
-			html: `<p><strong>Name:</strong> ${name}</p>
-                 <p><strong>Email:</strong> ${email}</p>
-                 <p><strong>Message:</strong> ${message.replace(/\n/g, '<br>')}</p>
-                 <hr><p>Count: ${currentCount}/5</p>`
+			reply_to: email,
+			subject: `New message from ${name}`,
+			html: `<p>${message.replace(/\n/g, '<br>')}</p><p>Reply to: ${email}</p>`
 		});
 
 		if (error) throw error;

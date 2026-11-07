@@ -52,7 +52,7 @@ export const POST: RequestHandler = async (event) => {
 		const { error } = await resend.emails.send({
 			from: 'Portfolio Contact <contact@yusrilmaqoshidana.my.id>',
 			to: [homeData.contact_email],
-			reply_to: email,
+			replyTo: email,
 			subject: `New message from ${name}`,
 			html: `<p>${message.replace(/\n/g, '<br>')}</p><p>Reply to: ${email}</p>`
 		});

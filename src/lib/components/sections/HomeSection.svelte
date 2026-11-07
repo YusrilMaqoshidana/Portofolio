@@ -1,6 +1,15 @@
 <script lang="ts">
 	import type { HomeSection as HomeData } from '$lib/supabase/types';
-	import { Github, Linkedin, Instagram, Twitter, FileText, ArrowRight } from 'lucide-svelte';
+	import {
+		Github,
+		Linkedin,
+		Instagram,
+		Twitter,
+		FileText,
+		ArrowRight,
+		MapPin,
+		Mail
+	} from 'lucide-svelte';
 	import { reveal } from '$lib/actions/reveal';
 
 	interface Props {
@@ -14,16 +23,18 @@
 		data ?? {
 			id: '',
 			updated_at: '',
-			full_name: 'Yusril Maqoshidana',
-			tagline: 'Fullstack Developer & Software Engineer',
-			bio: 'Building modern web applications, scalable backends, and beautiful user interfaces with Svelte, React, Node.js, and Cloud services.',
+			full_name: 'Moh. Yusril Maqoshidana',
+			tagline: 'Mobile & Android Developer | Flutter & Kotlin Enthusiast',
+			bio: 'I am Information Technology student with 1 year of experience in Mobile Development. Experienced in building mobile applications using Flutter, Jetpack Compose, and XML. Proficient in implementing clean code with expertise in Kotlin and Dart programming languages. Enthusiastic about Android development and mobile architectures.',
 			avatar_url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
-			resume_url: '#',
+			resume_url: '/cv',
+			location: 'Jember, East Java',
+			whatsapp_url: 'https://wa.link/jlntd2',
+			contact_email: 'yusrilmaqoshidana.work@gmail.com',
 			social_links: {
-				github: 'https://github.com',
-				linkedin: 'https://linkedin.com',
-				instagram: 'https://instagram.com',
-				twitter: ''
+				github: 'https://github.com/YusrilMaqoshidana',
+				linkedin: 'http://www.linkedin.com/in/moh-yusril-maqoshidana-ti222410102064',
+				whatsapp: 'https://wa.link/jlntd2'
 			}
 		}
 	);
@@ -50,9 +61,18 @@
 		<div class="w-full grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
 			<!-- Text Content -->
 			<div class="lg:col-span-7 space-y-7">
-				<!-- Heading -->
-				<div use:reveal={{ delay: 80 }}>
-					<p class="font-mono text-xs text-gray-500 mb-2 tracking-widest uppercase">// 01. introduction</p>
+				<!-- Heading & Location Tag -->
+				<div use:reveal={{ delay: 80 }} class="space-y-3">
+					<div class="flex flex-wrap items-center gap-2">
+						<p class="font-mono text-xs text-gray-500 tracking-widest uppercase">// 01. introduction</p>
+						{#if home.location}
+							<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 font-mono text-[11px]">
+								<MapPin class="w-3 h-3" />
+								{home.location}
+							</span>
+						{/if}
+					</div>
+
 					<h1 class="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-white leading-[1.1]">
 						Hi, I'm<br />
 						<span class="bg-gradient-to-r from-blue-400 via-teal-400 to-blue-300 bg-clip-text text-transparent">
@@ -75,33 +95,29 @@
 					</p>
 				</div>
 
-				<!-- CTAs + socials -->
-				<div use:reveal={{ delay: 320 }} class="flex flex-wrap items-center gap-4 pt-2">
-					{#if home.resume_url}
+				<!-- Quick Contact Badges -->
+				<div use:reveal={{ delay: 280 }} class="flex flex-wrap items-center gap-3 text-xs font-mono text-gray-400">
+					{#if home.contact_email}
 						<a
-							href={home.resume_url}
-							target="_blank"
-							rel="noopener noreferrer"
-							class="group inline-flex items-center gap-2 px-6 py-3 rounded-xl
-								bg-blue-500 text-white font-semibold text-sm
-								hover:bg-blue-400 transition-all duration-200
-								shadow-[0_0_24px_rgba(59,130,246,0.35)]
-								hover:shadow-[0_0_32px_rgba(59,130,246,0.5)]"
+							href="mailto:{home.contact_email}"
+							class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/[0.04] border border-white/8 hover:text-white hover:border-blue-500/40 transition-colors"
 						>
-							<FileText class="w-4 h-4" />
-							View Resume
-							<ArrowRight class="w-3.5 h-3.5 opacity-60 group-hover:translate-x-0.5 transition-transform" />
+							<Mail class="w-3.5 h-3.5 text-blue-400" />
+							<span>{home.contact_email}</span>
 						</a>
 					{/if}
+				</div>
 
+				<!-- CTAs + socials -->
+				<div use:reveal={{ delay: 320 }} class="flex flex-wrap items-center gap-4 pt-2">
 					<a
 						href="#projects"
 						class="inline-flex items-center gap-2 px-6 py-3 rounded-xl
-							glass border-white/10 text-white font-semibold text-sm
-							hover:bg-white/8 transition-all duration-200"
+							bg-blue-600 hover:bg-blue-500 text-white font-semibold text-sm
+							transition-all duration-200 shadow-[0_0_24px_rgba(59,130,246,0.35)]"
 					>
 						Explore Projects
-						<ArrowRight class="w-3.5 h-3.5 opacity-60" />
+						<ArrowRight class="w-4 h-4" />
 					</a>
 
 					<!-- Social icons -->
@@ -148,23 +164,22 @@
 					<!-- Outer glow ring -->
 					<div class="absolute -inset-3 rounded-full bg-gradient-to-br from-blue-500/30 via-teal-400/20 to-violet-500/20 blur-2xl opacity-60 group-hover:opacity-90 transition-opacity duration-700 animate-glow-pulse"></div>
 
-					<!-- Gradient border ring -->
-					<div class="absolute -inset-[3px] rounded-full bg-gradient-to-br from-blue-400 via-teal-400 to-violet-500 opacity-60 group-hover:opacity-90 transition-opacity duration-500"></div>
+					<!-- Image container -->
+					<div class="relative w-64 h-64 sm:w-72 sm:h-72 md:w-80 md:h-80 rounded-full overflow-hidden p-1 bg-gradient-to-br from-blue-500/60 via-teal-400/40 to-transparent shadow-[0_0_60px_rgba(59,130,246,0.3)]">
+						<div class="w-full h-full rounded-full overflow-hidden bg-background-card">
+							<img
+								src={home.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80'}
+								alt={home.full_name}
+								class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+							/>
+						</div>
+					</div>
 
-					<!-- Glass ring -->
-					<div class="absolute -inset-[1px] rounded-full glass"></div>
-
-					<!-- Avatar image -->
-					<img
-						src={home.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80'}
-						alt={home.full_name}
-						loading="eager"
-						fetchpriority="high"
-						decoding="async"
-						width="320"
-						height="320"
-						class="relative w-56 h-56 md:w-72 md:h-72 rounded-full object-cover"
-					/>
+					<!-- Floating badge -->
+					<div class="absolute -bottom-2 -left-4 px-4 py-2 rounded-2xl glass-gradient-border noise bg-black/60 backdrop-blur-md shadow-xl flex items-center gap-2">
+						<span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+						<span class="font-mono text-xs text-white">Available for Work</span>
+					</div>
 				</div>
 			</div>
 		</div>

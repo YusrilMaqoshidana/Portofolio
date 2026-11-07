@@ -1,39 +1,86 @@
 import type { PageServerLoad } from './$types';
-import type { HomeSection, ProjectSection, SkillSection, ExperienceSection } from '$lib/supabase/types';
+import type {
+	HomeSection,
+	ProjectSection,
+	SkillSection,
+	ExperienceSection,
+	EducationSection,
+	AchievementSection
+} from '$lib/supabase/types';
+import {
+	defaultHomeData,
+	defaultEducationData,
+	defaultExperienceData,
+	defaultProjectData,
+	defaultSkillData,
+	defaultAchievementData
+} from '$lib/data/cvData';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const supabase = locals.supabase;
 	const session = await locals.getSession();
 
 	try {
-		// Fetch all sections in parallel to significantly reduce server response time
-		const [homeRes, projectsRes, skillsRes, experiencesRes] = await Promise.all([
-			supabase.from('home_section').select('*').limit(1).maybeSingle(),
-			supabase.from('project_section').select('*').order('display_order', { ascending: true }).order('created_at', { ascending: false }),
-			supabase.from('skill_section').select('*').order('display_order', { ascending: true }),
-			supabase.from('experience_section').select('*').order('start_date', { ascending: false })
-		]);
+		// Fetch all sections in parallel
+		const [homeRes, projectsRes, skillsRes, experiencesRes, educationRes, achievementRes] =
+			await Promise.all([
+				supabase.from('home_section').select('*').limit(1).maybeSingle(),
+				supabase
+					.from('project_section')
+					.select('*')
+					.order('display_order', { ascending: true })
+					.order('created_at', { ascending: false }),
+				supabase.from('skill_section').select('*').order('display_order', { ascending: true }),
+				supabase
+					.from('experience_section')
+					.select('*')
+					.order('display_order', { ascending: true })
+					.order('start_date', { ascending: false }),
+				supabase.from('education_section').select('*').order('display_order', { ascending: true }),
+				supabase.from('achievement_section').select('*').order('display_order', { ascending: true })
+			]);
 
-		const home = homeRes.data;
-		const projects = projectsRes.data;
-		const skills = skillsRes.data;
-		const experiences = experiencesRes.data;
+		const home = (homeRes.data as HomeSection | null) || defaultHomeData;
+		const projects =
+			projectsRes.data && projectsRes.data.length > 0
+				? (projectsRes.data as ProjectSection[])
+				: defaultProjectData;
+		const skills =
+			skillsRes.data && skillsRes.data.length > 0
+				? (skillsRes.data as SkillSection[])
+				: defaultSkillData;
+		const experiences =
+			experiencesRes.data && experiencesRes.data.length > 0
+				? (experiencesRes.data as ExperienceSection[])
+				: defaultExperienceData;
+		const educations =
+			educationRes.data && educationRes.data.length > 0
+				? (educationRes.data as EducationSection[])
+				: defaultEducationData;
+		const achievements =
+			achievementRes.data && achievementRes.data.length > 0
+				? (achievementRes.data as AchievementSection[])
+				: defaultAchievementData;
 
 		return {
 			session,
-			home: (home as HomeSection | null),
-			projects: (projects as ProjectSection[] | null) ?? [],
-			skills: (skills as SkillSection[] | null) ?? [],
-			experiences: (experiences as ExperienceSection[] | null) ?? []
+			home,
+			projects,
+			skills,
+			experiences,
+			educations,
+			achievements
 		};
 	} catch (error) {
 		console.error('Error fetching portfolio data from Supabase:', error);
 		return {
 			session,
-			home: null,
-			projects: [],
-			skills: [],
-			experiences: []
+			home: defaultHomeData,
+			projects: defaultProjectData,
+			skills: defaultSkillData,
+			experiences: defaultExperienceData,
+			educations: defaultEducationData,
+			achievements: defaultAchievementData
 		};
 	}
 };

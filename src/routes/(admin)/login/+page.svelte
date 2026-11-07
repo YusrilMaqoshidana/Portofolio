@@ -40,10 +40,10 @@
 			<!-- Error Message -->
 			{#if form?.error}
 				<div
-					class="mb-6 flex items-center gap-3 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-red-400"
+					class="mb-6 flex items-center justify-center gap-2.5 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-red-400 text-center text-sm"
 				>
 					<CircleAlert class="h-5 w-5 shrink-0" />
-					<p class="text-sm">{form.error}</p>
+					<p>{form.error}</p>
 				</div>
 			{/if}
 
